@@ -1,0 +1,22 @@
+# Fast checks only (Ruff + file hygiene); tests run via scripts/check.sh and CI.
+# `pre-commit autoupdate` keeps the revs current.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(docs/history/phase0_outputs|docs/history/phase1_outputs|tests/data|src/bloom/data)/   # frozen tool outputs; committed copies stay byte-identical to the staged files
+      - id: end-of-file-fixer
+        exclude: ^(docs/history/phase0_outputs|docs/history/phase1_outputs|tests/data|src/bloom/data)/
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        # committed fixtures (tests/data/) are <= 3 MB; anything larger ships via the public bucket (docs/assets.md)
+        args: ["--maxkb=20000"]
+      - id: check-merge-conflict
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.5
+    hooks:
+      - id: ruff-check
+        args: ["--fix"]
+      - id: ruff-format

@@ -1,0 +1,156 @@
+{
+  "manifest_version": 1,
+  "created": "2026-11-14T10:08:44Z",
+  "base_url": "https://bloom-biorxiv.s3.us-west-2.amazonaws.com/",
+  "model_id": "hyacinth",
+  "reference_id": "mm10-evo2-v1",
+  "examples_version": "examples-v2",
+  "versions": {
+    "hyacinth": {
+      "group": "model",
+      "source": "alleninstitute/bloom training run hyacinth, last.ckpt step 530000"
+    },
+    "mm10-evo2-v1": {
+      "group": "reference",
+      "source": "evo2_mean_ctx_2048_pca_768_norm (genes 32,129; peaks 1,747,701)",
+      "orthologs": {
+        "ensembl_release": "115",
+        "counts": "biomart_rows=22469 one2one_confidence1=15732 kept=15676 dropped_mouse_gene_id_not_in_universe=56",
+        "filter": "mmusculus_homolog_orthology_type == ortholog_one2one AND orthology_confidence == 1; pairs with a duplicated human or mouse symbol removed; mouse_gene_id restricted to genes.parquet.gene_id",
+        "join": "mouse_gene_id == genes.parquet.gene_id (never on the mouse symbol); emb_idx = gene-table row; mouse_gene_name is the Ensembl 115 symbol and differs from genes.parquet.gene_name for 486 pairs",
+        "generated": "2026-11-13 by tools/make_orthologs.py (bloom-biorxiv, pre-release commit b853b61)"
+      }
+    },
+    "examples-v2": {
+      "group": "example",
+      "source": "examples/multiome_20: 20 cells (10 AIT33 subclasses x 2) of hyacinth-v1/eval_balanced_50/allen_multiome, seed 0, with evaluate.py reference embeddings (reference_embeddings.{npz,json})"
+    }
+  },
+  "licenses": {
+    "CC-BY-NC-4.0": "Creative Commons Attribution-NonCommercial 4.0 International: model weights, derived reference tables, example data and the model card (https://creativecommons.org/licenses/by-nc/4.0/); the companion code is MIT (repository LICENSE)"
+  },
+  "n_files": 15,
+  "total_bytes": 6076889558,
+  "files": [
+    {
+      "path": "examples/multiome_20/atac.h5ad",
+      "size_bytes": 5912106,
+      "sha256": "96ad43d7e508051af858abf50c5dd408b71d96a9f5f6434649fdfa9049ce9983",
+      "group": "example",
+      "version": "examples-v2",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "examples/multiome_20/cells.tsv",
+      "size_bytes": 1452,
+      "sha256": "1f46f1f7c9c5eea722e273f42ef7afe7e71140613f27368a56c7f81ce98427ef",
+      "group": "example",
+      "version": "examples-v2",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "examples/multiome_20/reference_embeddings.json",
+      "size_bytes": 39257,
+      "sha256": "40ac6db87f1cc8634b1887ce930b8f7dfdfc4faadb8ec944b0d25db4138aad92",
+      "group": "example",
+      "version": "examples-v2",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "examples/multiome_20/reference_embeddings.npz",
+      "size_bytes": 767956,
+      "sha256": "b06adfd0ec3ea4289c0a7ff2616a8f16b20879797a24918392d5b36e778d6595",
+      "group": "example",
+      "version": "examples-v2",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "examples/multiome_20/rna.h5ad",
+      "size_bytes": 1398379,
+      "sha256": "cb9bfb097bf07f1d406f6bfde76fc929f4be058ec02077c3dce6a7dcb303326e",
+      "group": "example",
+      "version": "examples-v2",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "models/hyacinth/config.json",
+      "size_bytes": 3975,
+      "sha256": "7a94063b6f4d3dead543b4f565c20c44231878a0518f48b5183d8705c904c07e",
+      "group": "model",
+      "version": "hyacinth",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "models/hyacinth/model.safetensors",
+      "size_bytes": 496624516,
+      "sha256": "79fbd1092ded8e88c9d8d7ba3771e14a20933c18bd14da1dad81a3fd23eb5dcc",
+      "group": "model",
+      "version": "hyacinth",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "references/mm10-evo2-v1/genes.parquet",
+      "size_bytes": 1733063,
+      "sha256": "8b7719388cf83a7d2d35705b0f621574cf8ea09995bb860823426d05914c2efb",
+      "group": "reference",
+      "version": "mm10-evo2-v1",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "references/mm10-evo2-v1/genes.safetensors",
+      "size_bytes": 98861805,
+      "sha256": "1aee9c51e935240ac2a7805d5cb84a4b5e807ba6904194cda2158755a756dc83",
+      "group": "reference",
+      "version": "mm10-evo2-v1",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "references/mm10-evo2-v1/orthologs_human_mouse_one2one.tsv",
+      "size_bytes": 837355,
+      "sha256": "7845a28536c5b83e23f757524ead00d371ce4e65a1009b074b3acbf6c28213f2",
+      "group": "reference",
+      "version": "mm10-evo2-v1",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "references/mm10-evo2-v1/peaks.bed.gz",
+      "size_bytes": 20520259,
+      "sha256": "115dc043c0a4c2db24afa0cb9d6d53a4722a01d40148e8a82e09c288e1a1e3b3",
+      "group": "reference",
+      "version": "mm10-evo2-v1",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "references/mm10-evo2-v1/peaks.parquet",
+      "size_bytes": 72448807,
+      "sha256": "01cb0ff2f871ade64a18c78102ae05cca3b8f1dc1b3cc3ef72b472425a4848a5",
+      "group": "reference",
+      "version": "mm10-evo2-v1",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "references/mm10-evo2-v1/peaks.safetensors",
+      "size_bytes": 5377676873,
+      "sha256": "4938dd233791c6dbcccf130413c79e48c04bdce126f8ddb5409ff557b862c25b",
+      "group": "reference",
+      "version": "mm10-evo2-v1",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "references/mm10-evo2-v1/panels/da_2127.txt",
+      "size_bytes": 51207,
+      "sha256": "c091db4104f17cbdb03a99f0638f90555a9be2358e677da31f7310369e23d22b",
+      "group": "reference",
+      "version": "mm10-evo2-v1",
+      "license": "CC-BY-NC-4.0"
+    },
+    {
+      "path": "references/mm10-evo2-v1/panels/hvg_1999.txt",
+      "size_bytes": 12548,
+      "sha256": "f90ecf9729e00bb5ede8763782cc527f8ae40ef5ef5e26cae376aefa112cbfa4",
+      "group": "reference",
+      "version": "mm10-evo2-v1",
+      "license": "CC-BY-NC-4.0"
+    }
+  ]
+}

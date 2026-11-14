@@ -1,0 +1,63 @@
+# @package _global_
+#
+# bloom-biorxiv Phase 1 review (2026-11-13, issues #26 / #27): regenerate the top4096 reference embeddings from
+# COLUMN-SORTED copies of the Phase 0 eval inputs (${oc.env:BLOOM_EVAL_INPUTS_SORTED}/, written by
+# tools/sort_evalinputs.py). Everything else is identical to tools/hydra/phase0_reference_embeddings.yaml: dataset
+# `name` eval_balanced_50_allen_multiome (feature map), MULTIOME batch type, mm10 reference space, batch 8, seed 42.
+# Only the two deterministic top4096 tasks are listed: the resample references are unaffected by CSR order.
+# Scratch preset: copy to <cfg>/experiment_evaluate/ and pass `--config-dir <cfg>`.
+defaults:
+  - /evaluate/reference_space@evaluate.reference_spaces.mm10: mm10
+  - _self_
+
+paths:
+  embeddings: ${oc.env:BLOOM_TRAINING_DATA}/embeddings
+  feature_maps: ${oc.env:BLOOM_EVAL_INPUTS_SORTED}/feature-maps   # symlink -> evalinputs/feature-maps (ONE symlink to the eval_balanced_50_allen_multiome map)
+  strategies: ${oc.env:BLOOM_TRAINING_DATA}/strategies
+
+evaluate:
+  precision: "32-true"
+  batch_size: 8
+  num_workers: 8
+  seed: 42
+  peak_modality: atac
+
+  evaluation_datasets:
+    rna_100:
+      name: eval_balanced_50_allen_multiome
+      batch_type: MULTIOME
+      reference_space: mm10
+      feature_map_dir: ${paths.feature_maps}
+      metadata: ${oc.env:BLOOM_EVAL_INPUTS_SORTED}/rna_100/metadata.h5ad
+      rna: ${oc.env:BLOOM_EVAL_INPUTS_SORTED}/rna_100/rna.h5ad
+      atac: ${oc.env:BLOOM_EVAL_INPUTS_SORTED}/rna_100/atac.h5ad
+    allen_multiome_300:
+      name: eval_balanced_50_allen_multiome
+      batch_type: MULTIOME
+      reference_space: mm10
+      feature_map_dir: ${paths.feature_maps}
+      metadata: ${oc.env:BLOOM_EVAL_INPUTS_SORTED}/allen_multiome_300/metadata.h5ad
+      rna: ${oc.env:BLOOM_EVAL_INPUTS_SORTED}/allen_multiome_300/rna.h5ad
+      atac: ${oc.env:BLOOM_EVAL_INPUTS_SORTED}/allen_multiome_300/atac.h5ad
+
+  tasks:
+    rna_100_top4096:
+      mode: embed
+      dataset: rna_100
+      strategy:
+        _target_: bloom.utils.strategy.StrategyTopExpressedGenes
+        idx_file: null
+        Lmax: 4096
+        Lq: 128
+        binarize_input_genes: true
+        peak_modality: ${evaluate.peak_modality}
+    allen_multiome_300_top4096:
+      mode: embed
+      dataset: allen_multiome_300
+      strategy:
+        _target_: bloom.utils.strategy.StrategyTopExpressedGenes
+        idx_file: null
+        Lmax: 4096
+        Lq: 128
+        binarize_input_genes: true
+        peak_modality: ${evaluate.peak_modality}

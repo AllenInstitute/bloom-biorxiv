@@ -1,0 +1,8 @@
+# Binary fixtures: no text diffs, no EOL conversion (sha256 must match MANIFEST.json).
+*.h5ad binary
+*.npy binary
+*.npz binary
+*.safetensors binary
+*.parquet binary
+# Fixture sidecars are frozen tool outputs; keep them byte-identical.
+tests/data/ref/*.json -text

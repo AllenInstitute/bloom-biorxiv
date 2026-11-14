@@ -1,0 +1,101 @@
+# @package _global_
+#
+# bloom-biorxiv Phase 0: reference embeddings for the rna_100 fixture and the allen_multiome_300 example,
+# produced with the ORIGINAL alleninstitute/bloom evaluate.py on the maintainers' GPU host.
+# Inputs are row-subsets of hyacinth-v1/eval_balanced_50/allen_multiome with the FULL original column space,
+# so the eval_balanced_50_allen_multiome feature maps apply unchanged (dataset `name` is kept for that reason).
+# Scratch preset: lives outside ~/code/bloom and is passed with `--config-dir`.
+defaults:
+  - /evaluate/reference_space@evaluate.reference_spaces.mm10: mm10
+  - _self_
+
+paths:
+  embeddings: ${oc.env:BLOOM_TRAINING_DATA}/embeddings
+  feature_maps: ${oc.env:BLOOM_EVAL_INPUTS}/feature-maps   # dir with ONE symlink -> the eval_balanced_50_allen_multiome feature map
+  strategies: ${oc.env:BLOOM_TRAINING_DATA}/strategies
+
+evaluate:
+  precision: "32-true"
+  batch_size: 8
+  num_workers: 8
+  seed: 42            # EvalDataset per-cell seed = seed + file_idx*100_000 + row_idx (row_idx = row in the subset file)
+  peak_modality: atac
+
+  evaluation_datasets:
+    rna_100:
+      name: eval_balanced_50_allen_multiome
+      batch_type: MULTIOME
+      reference_space: mm10
+      feature_map_dir: ${paths.feature_maps}
+      metadata: ${oc.env:BLOOM_EVAL_INPUTS}/rna_100/metadata.h5ad
+      rna: ${oc.env:BLOOM_EVAL_INPUTS}/rna_100/rna.h5ad
+      atac: ${oc.env:BLOOM_EVAL_INPUTS}/rna_100/atac.h5ad
+    allen_multiome_300:
+      name: eval_balanced_50_allen_multiome
+      batch_type: MULTIOME
+      reference_space: mm10
+      feature_map_dir: ${paths.feature_maps}
+      metadata: ${oc.env:BLOOM_EVAL_INPUTS}/allen_multiome_300/metadata.h5ad
+      rna: ${oc.env:BLOOM_EVAL_INPUTS}/allen_multiome_300/rna.h5ad
+      atac: ${oc.env:BLOOM_EVAL_INPUTS}/allen_multiome_300/atac.h5ad
+
+  tasks:
+    rna_100_top4096:
+      mode: embed
+      dataset: rna_100
+      strategy:
+        _target_: bloom.utils.strategy.StrategyTopExpressedGenes
+        idx_file: null
+        Lmax: 4096
+        Lq: 128
+        binarize_input_genes: true
+        peak_modality: ${evaluate.peak_modality}
+    rna_100_resamp_8192_d4:
+      mode: embed
+      dataset: rna_100
+      strategy:
+        _target_: bloom.utils.strategy.StrategyTiledPool
+        feature_modality: gene
+        idx_file: null
+        nonzero_only: true
+        draw_mode: resample
+        max_draws: 4
+        Lmax: 8192
+        Lq: 128
+        peak_modality: ${evaluate.peak_modality}
+    allen_multiome_300_top4096:
+      mode: embed
+      dataset: allen_multiome_300
+      strategy:
+        _target_: bloom.utils.strategy.StrategyTopExpressedGenes
+        idx_file: null
+        Lmax: 4096
+        Lq: 128
+        binarize_input_genes: true
+        peak_modality: ${evaluate.peak_modality}
+    allen_multiome_300_resamp_8192_d4:
+      mode: embed
+      dataset: allen_multiome_300
+      strategy:
+        _target_: bloom.utils.strategy.StrategyTiledPool
+        feature_modality: gene
+        idx_file: null
+        nonzero_only: true
+        draw_mode: resample
+        max_draws: 4
+        Lmax: 8192
+        Lq: 128
+        peak_modality: ${evaluate.peak_modality}
+    allen_multiome_300_resamp_atac_8192_d16:
+      mode: embed
+      dataset: allen_multiome_300
+      strategy:
+        _target_: bloom.utils.strategy.StrategyTiledPool
+        feature_modality: peak
+        idx_file: null
+        nonzero_only: true
+        draw_mode: resample
+        max_draws: 16
+        Lmax: 8192
+        Lq: 128
+        peak_modality: ${evaluate.peak_modality}

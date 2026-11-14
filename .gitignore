@@ -1,0 +1,34 @@
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.venv/
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+# data: downloaded assets and outputs stay outside git (~/.cache/bloom).
+# The ONLY committed data are the small fixtures in tests/data/ (rna_100.h5ad 2.8 MB,
+# ref/rna_100_reference_embeddings.npz 1.1 MB). Everything else (gene/peak tables, the 20-cell multiome
+# fixture) comes from the public bucket (docs/assets.md) and must never be committed: *.safetensors /
+# *.parquet / *.npy are ignored everywhere, and pre-commit refuses files > 20 MB.
+*.h5ad
+!tests/data/rna_100.h5ad
+*.safetensors
+*.parquet
+*.npy
+*.npz
+!tests/data/ref/rna_100_reference_embeddings.npz
+*.bed.gz
+*.ckpt
+work/
+outputs/
+# notebooks
+.ipynb_checkpoints/
+
+# env-build / job logs
+*.log

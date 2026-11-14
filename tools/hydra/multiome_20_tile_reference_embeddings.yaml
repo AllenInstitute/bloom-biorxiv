@@ -1,0 +1,62 @@
+# @package _global_
+#
+# bloom-biorxiv: Tile (StrategyTiledPool draw_mode=tile) reference embeddings for the 20-cell multiome fixture
+# (issue #31). Same wiring as tools/hydra/multiome_20_reference_embeddings.yaml (column-sorted inputs, dataset `name`
+# eval_balanced_50_allen_multiome for the feature map, MULTIOME, mm10, batch 8, seed 42); run twice via
+# tools/run_evaluate_checked.py: paper-faithful (TF32 "medium", fused fast path) and
+# BLOOM_MATMUL_PRECISION=highest BLOOM_MHA_FASTPATH=0 (TF32 off, unfused = CPU math).
+# RNA: Lmax 4096, max_draws 2 so cells with > 4096 detected genes really get 2 disjoint draws (every fixture cell
+# detects < 8192 genes, so the two draws partition the detected set). ATAC: Lmax 8192, max_draws 4.
+defaults:
+  - /evaluate/reference_space@evaluate.reference_spaces.mm10: mm10
+  - _self_
+
+paths:
+  embeddings: ${oc.env:BLOOM_TRAINING_DATA}/embeddings
+  feature_maps: ${oc.env:BLOOM_EVAL_INPUTS_SORTED}/feature-maps
+  strategies: ${oc.env:BLOOM_TRAINING_DATA}/strategies
+
+evaluate:
+  precision: "32-true"
+  batch_size: 8
+  num_workers: 8
+  seed: 42
+  peak_modality: atac
+
+  evaluation_datasets:
+    multiome_20:
+      name: eval_balanced_50_allen_multiome
+      batch_type: MULTIOME
+      reference_space: mm10
+      feature_map_dir: ${paths.feature_maps}
+      metadata: ${oc.env:BLOOM_EVAL_INPUTS_SORTED}/multiome_20/metadata.h5ad
+      rna: ${oc.env:BLOOM_EVAL_INPUTS_SORTED}/multiome_20/rna.h5ad
+      atac: ${oc.env:BLOOM_EVAL_INPUTS_SORTED}/multiome_20/atac.h5ad
+
+  tasks:
+    multiome_20_tile_4096_d2:
+      mode: embed
+      dataset: multiome_20
+      strategy:
+        _target_: bloom.utils.strategy.StrategyTiledPool
+        feature_modality: gene
+        idx_file: null
+        nonzero_only: true
+        draw_mode: tile
+        max_draws: 2
+        Lmax: 4096
+        Lq: 128
+        peak_modality: ${evaluate.peak_modality}
+    multiome_20_tile_atac_8192_d4:
+      mode: embed
+      dataset: multiome_20
+      strategy:
+        _target_: bloom.utils.strategy.StrategyTiledPool
+        feature_modality: peak
+        idx_file: null
+        nonzero_only: true
+        draw_mode: tile
+        max_draws: 4
+        Lmax: 8192
+        Lq: 128
+        peak_modality: ${evaluate.peak_modality}

@@ -1,0 +1,30 @@
+# Auto-generated release notes (`gh release create --generate-notes`): PR titles are Conventional Commits,
+# grouped here by label; label PRs with `type:*` (or let the maintainer add the label at merge time).
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+  categories:
+    - title: Breaking changes
+      labels:
+        - breaking
+    - title: Features
+      labels:
+        - type:feat
+    - title: Fixes
+      labels:
+        - type:fix
+    - title: Validation and tests
+      labels:
+        - type:test
+    - title: Documentation
+      labels:
+        - type:docs
+    - title: Tooling, CI and chores
+      labels:
+        - type:chore
+        - type:ci
+        - type:tooling
+    - title: Other changes
+      labels:
+        - "*"

@@ -1,0 +1,107 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bloom-biorxiv"
+description = "Inference-only companion package for the Bloom manuscript: cell embeddings from single-cell RNA / ATAC AnnData."
+readme = "README.md"
+requires-python = ">=3.12"
+# Code: MIT (LICENSE). Weights, reference tables and example data fetched by `bloom download`: CC BY-NC 4.0
+# (models/hyacinth/MODEL_CARD.md and the `license` field of every MANIFEST.json entry).
+license = "MIT"
+license-files = ["LICENSE"]
+dynamic = ["version"]
+authors = [{ name = "Allen Institute" }]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    # torch: version floor only. The build (cpu / cu128 / mps) is chosen by the user before
+    # `pip install -e .`; see scripts/setup_env.sh. CI pins the CPU wheel explicitly.
+    "torch>=2.10",
+    "numpy",
+    "pandas",
+    "scipy",
+    "anndata",
+    "h5py",
+    "pyarrow",
+    "safetensors",
+    "pyyaml",
+    "typer",
+    "requests",
+    # Attention block. Pinned to commit ef5fb8a8e5768071da9d9542a595dd8e05b0cb03 = seq-head scale 1/sqrt(d_v)=1/sqrt(32)
+    # (docs/architecture.md section 9). Later commits (branch mask-dev) use 1/sqrt(768): never install those.
+    # AllenInstitute/bloom-sprint-attn is public (2026-11-13); pinned at the sha whose seq-head scale is
+    # 1/sqrt(32) (AGENTS.md section 6). TODO: switch the pin to a release tag (e.g. @v0.1.0) once the
+    # bloom-sprint-attn maintainers tag one that contains ef5fb8a; no tag exists yet.
+    "bloom-arch @ git+https://github.com/AllenInstitute/bloom-sprint-attn@ef5fb8a8e5768071da9d9542a595dd8e05b0cb03",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "pre-commit"]
+
+[project.scripts]
+bloom = "bloom.cli:app"
+
+[project.urls]
+Repository = "https://github.com/alleninstitute/bloom-biorxiv"
+Paper = "https://doi.org/10.64898/2026.11.11.765881"
+Changelog = "https://github.com/alleninstitute/bloom-biorxiv/blob/main/CHANGELOG.md"
+Issues = "https://github.com/alleninstitute/bloom-biorxiv/issues"
+
+[tool.hatch.metadata]
+# required for the `bloom-arch @ git+...` direct reference above
+allow-direct-references = true
+
+[tool.hatch.version]
+path = "src/bloom/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bloom"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "unit: fast CPU tests, no downloads (< 1 min total); always run",
+    "regression: CPU tests against committed fixtures and reference embeddings (< 5 min); run in CI",
+    "assets: needs `bloom download` (5.4 GB peak table) and/or a CUDA GPU; run manually on the maintainers' GPU host before a release",
+    "weights: needs the released weights `models/hyacinth/model.safetensors` (497 MB); added automatically to every test that uses the `hyacinth_model_dir` fixture (tests/conftest.py). CI runs `(unit or regression) and not weights` on pull requests and `weights and not assets` on pushes to main / nightly",
+]
+
+# Ruff configuration carried over from alleninstitute/bloom (pyproject.toml), plus line-length/target.
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# See rules: https://beta.ruff.rs/docs/rules/
+select = [
+    "I",    # isort
+    "N",    # pep8-naming
+    "NPY",  # numpy
+    "RUF",  # ruff-specific rules
+]
+
+ignore = [
+    "invalid-argument-name",  # argument name should be lowercase; fine for matrices
+    "non-lowercase-variable-in-function",  # variable name should be lowercase; fine for matrices
+    "numpy-legacy-random", # allow calls to np.random; could cause slightly different results
+    "lowercase-imported-as-non-lowercase",
+    "mixed-case-variable-in-global-scope", # allow mixed case variable names
+    "unused-unpacked-variable", # allow unused variables to be defined
+]
+
+preview = true
+
+[tool.ruff.format]
+preview = true
+# do not reformat fenced code blocks in Markdown (docs/ are verbatim design documents)
+exclude = ["*.md"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["bloom"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]

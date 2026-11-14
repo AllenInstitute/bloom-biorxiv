@@ -1,0 +1,108 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 9 * * *"   # nightly weight-dependent tier (UTC)
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Two CPU tiers (issue #51). `check` runs on every pull request and push: lint + `(unit or regression) and not
+# weights` with only the gene table + orthologs downloaded (target <= 3 min on the 4-vCPU runner). `weights` runs the
+# weight-dependent regression tests (G1, G8, E1-E3, E8: five `top` 4096 runs of the 100-cell fixture, ~20 min on 4
+# vCPU) after `bloom download --what model,genes,orthologs` -- on pushes to `main`, nightly and on demand, not on pull
+# requests. The `assets` tier (full download, GPU gates) is run manually on a CUDA host before a release
+# (docs/development.md section 3, docs/standards.md item 5).
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BLOOM_HOME: ${{ github.workspace }}/.bloom_home
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # bloom-arch is installed from the public AllenInstitute/bloom-sprint-attn repo at the sha pinned in
+      # pyproject.toml (anonymous clone; no token needed).
+      - name: Install torch (CPU wheel, pinned)
+        run: python -m pip install "torch==2.11.*" --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install package (clean env)
+        run: python -m pip install -e ".[dev]"
+
+      # Gene table (101 MB) + orthologs (0.8 MB): the regression tests on the real gene table need them (without the
+      # cache `tests/conftest.py` would fetch them itself). Cached on the packaged manifest's sha256.
+      - name: Manifest sha (cache key)
+        id: manifest
+        run: echo "sha=$(sha256sum src/bloom/data/manifest.json | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore gene table + orthologs
+        id: assets-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BLOOM_HOME }}
+          key: bloom-home-genes-orthologs-${{ steps.manifest.outputs.sha }}
+
+      - name: bloom download --what genes,orthologs
+        if: steps.assets-cache.outputs.cache-hit != 'true'
+        run: bloom download --what genes,orthologs
+
+      - name: bloom info
+        run: bloom info
+
+      - name: Lint, format, unit + regression tests without the weights
+        run: bash scripts/check.sh fast
+
+  weights:
+    # Weight-dependent regression tier: pushes to main, nightly, manual dispatch. Not on pull requests (issue #51).
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BLOOM_HOME: ${{ github.workspace }}/.bloom_home
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install torch (CPU wheel, pinned)
+        run: python -m pip install "torch==2.11.*" --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install package (clean env)
+        run: python -m pip install -e ".[dev]"
+
+      # Weights (497 MB) + gene table (101 MB) + orthologs (0.8 MB) so the CPU parity gate G1 and the other
+      # weight-dependent regression tests really run (issue #45). Cached on the packaged manifest's sha256.
+      - name: Manifest sha (cache key)
+        id: manifest
+        run: echo "sha=$(sha256sum src/bloom/data/manifest.json | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore model + gene table + orthologs
+        id: assets-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BLOOM_HOME }}
+          key: bloom-home-model-genes-orthologs-${{ steps.manifest.outputs.sha }}
+
+      - name: bloom download --what model,genes,orthologs
+        if: steps.assets-cache.outputs.cache-hit != 'true'
+        run: bloom download --what model,genes,orthologs
+
+      - name: bloom info
+        run: bloom info
+
+      - name: Weight-dependent regression tests (G1, G8, E1-E3, E8)
+        run: pytest -m "weights and not assets" --durations=20

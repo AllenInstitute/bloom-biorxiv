@@ -1,0 +1,148 @@
+{
+  "model_id": "hyacinth",
+  "reference_id": "mm10-evo2-v1",
+  "config_version": "1.0",
+  "architecture": {
+    "d_cseq": 768,
+    "d_descriptor": 128,
+    "d_metadata": 48,
+    "d_measurement": 80,
+    "d_model": 1024,
+    "n_latents": 256,
+    "n_transformer_layers": 8,
+    "n_heads": 8,
+    "decoder_hidden_dim": 64,
+    "dropout": 0.1,
+    "attention": {
+      "d_val": 40,
+      "d_u": 32,
+      "K": 64,
+      "d_v": 32,
+      "n_sequence_heads": 8,
+      "n_position_heads": 8,
+      "n_standard_heads": 4,
+      "max_G": 32,
+      "lambda_min": 100.0,
+      "lambda_max": 100000000.0,
+      "target_scales": null,
+      "rho": 1.15,
+      "beta_init": 0.0,
+      "tau_init": 1.0,
+      "learn_tau": false,
+      "pad_v_for_flash": false,
+      "seed": 42,
+      "seq_head_scale": 0.17677669529663687
+    }
+  },
+  "embedding_config_hparams": {
+    "d_cseq": 768,
+    "d_descriptor": 128,
+    "d_metadata": 48,
+    "d_measurement": 80,
+    "d_model_override": 1024,
+    "n_ftype": 3,
+    "n_mtype": 2,
+    "n_batch": 4,
+    "n_transformer_layers": 8,
+    "n_latents": 256,
+    "n_heads": 8,
+    "dropout": 0.1
+  },
+  "training_context": {
+    "Lmax": 8192,
+    "Lq": 8054,
+    "Lmin": 124,
+    "binarize_input_genes": true,
+    "binarize_input_peaks": true,
+    "binarize_query_genes": true,
+    "binarize_query_peaks": true,
+    "peak_modality": "atac",
+    "mask_metadata_keys": [
+      "ftype",
+      "mtype",
+      "batch"
+    ],
+    "strategy_target": "bloom.utils.strategy.StrategyRandomContrastiveNonzeroOnly",
+    "train_pool": "mm-brain-adult_free_hvg-8k.yaml",
+    "precision": "bf16-mixed"
+  },
+  "strategy_defaults": {
+    "gene": {
+      "strategy": "random",
+      "lmax": 8192,
+      "draws": 4
+    },
+    "peak": {
+      "strategy": "random",
+      "lmax": 8192,
+      "draws": 16
+    },
+    "top": {
+      "lmax": 4096
+    }
+  },
+  "parameters": {
+    "total": 124144831,
+    "per_module": {
+      "feature_emb": 119080,
+      "bloom_first_layer": 10231569,
+      "encoder": 113632256,
+      "decoder": 161926
+    },
+    "n_state_dict_tensors": 198,
+    "n_state_dict_elements": 124150663,
+    "persistent_buffers": [
+      "bloom_first_layer.attn_block.pos_encoder.codebook.u",
+      "bloom_first_layer.attn_block.pos_encoder.codebook.r",
+      "bloom_first_layer.attn_block.pos_encoder.fourier.omegas",
+      "bloom_first_layer.attn_block.pos_encoder.fourier.lambdas",
+      "bloom_first_layer.attn_block.pos_heads.lambdas",
+      "bloom_first_layer.attn_block.pos_heads.log_w",
+      "bloom_first_layer.attn_block.pos_heads.log_tau"
+    ],
+    "dtype": "float32"
+  },
+  "state_dict_remap": {
+    "model.bloom_first_layer.": "first_layer.",
+    "model.encoder.": "encoder.",
+    "model.decoder.": "decoder.",
+    "model.feature_emb.": "feature_emb."
+  },
+  "dropped_from_checkpoint": {
+    "state_dict_groups": [
+      "align_proj",
+      "probe",
+      "probe_class",
+      "probe_subclass"
+    ],
+    "other": [
+      "optimizer_states",
+      "lr_schedulers",
+      "loops",
+      "callbacks"
+    ]
+  },
+  "weights": {
+    "file": "model.safetensors",
+    "size_bytes": 496624516,
+    "sha256": "79fbd1092ded8e88c9d8d7ba3771e14a20933c18bd14da1dad81a3fd23eb5dcc"
+  },
+  "source": {
+    "repo": "alleninstitute/bloom",
+    "training_commit": "671c8cb",
+    "export_commit": "141f0d3444382db8bb9ebd6545f9d62c255d93a1",
+    "run": "hyacinth training run (step 530000)",
+    "checkpoint": "last.ckpt",
+    "checkpoint_alias": "3458-step=530000.ckpt",
+    "checkpoint_sha256": "45ba9313e43fc86ce2c5896e68f4cba60386e87c1314a2cc093aad056cf13867",
+    "global_step": 530000,
+    "epoch": 2069,
+    "pytorch_lightning_version": "2.6.1",
+    "torch_version_at_export": "2.11.0+cu128",
+    "bloom_arch_repo": "AllenInstitute/bloom-sprint-attn",
+    "bloom_arch_commit": "ef5fb8a8e5768071da9d9542a595dd8e05b0cb03",
+    "export_date": "2026-11-12T23:21:12Z",
+    "export_host": "maintainer GPU host (1x NVIDIA L4)",
+    "export_env": "training-repo env"
+  }
+}
